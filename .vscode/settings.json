@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "*.c": "c",
+        "spi_master.h": "c",
+        "esp_http_server.h": "c",
+        "task.h": "c",
+        "dht11.h": "c",
+        "gpio.h": "c",
+        "freertos.h": "c"
+    }
+}
