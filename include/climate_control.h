@@ -11,8 +11,8 @@
 
 // GPIO pins for ESP32-S3-DevKitC-1
 #define DHT_GPIO GPIO_NUM_21
-#define FAN_GPIO GPIO_NUM_11
-#define HEATER_GPIO GPIO_NUM_12
+#define FAN_GPIO GPIO_NUM_12
+#define HEATER_GPIO GPIO_NUM_11
 
 // Temperature thresholds
 #define TEMP_HIGH 22

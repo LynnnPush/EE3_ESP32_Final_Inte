@@ -39,7 +39,6 @@
 #define NRF_CMD_FLUSH_RX     0xE2
 
 // SPI configuration
-#define SPI_HOST SPI2_HOST
 #define SPI_CLOCK_SPEED 1000000  // 1 MHz
 
 // Global variables

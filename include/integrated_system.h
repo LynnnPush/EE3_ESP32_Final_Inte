@@ -64,8 +64,8 @@
  #define DOOR_SERVO_CHANNEL LEDC_CHANNEL_0  // LEDC channel for the servo
  #define DOOR_SERVO_TIMER LEDC_TIMER_0      // LEDC timer for the servo
  #define DOOR_SERVO_MODE LEDC_LOW_SPEED_MODE  // LEDC mode
- #define DOOR_OPEN_ANGLE 90           // Angle when door is open (adjust as needed)
- #define DOOR_CLOSED_ANGLE 0          // Angle when door is closed (adjust as needed)
+ #define DOOR_OPEN_ANGLE 0           // Angle when door is open (adjust as needed)
+ #define DOOR_CLOSED_ANGLE 90          // Angle when door is closed (adjust as needed)
  #define DOOR_OPEN_TIME_MS 5000       // Time to keep door open in milliseconds
  
  /* NRF24L01 Settings */
