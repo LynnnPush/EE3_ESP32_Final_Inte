@@ -78,13 +78,32 @@ void sensor_reading_timer_callback(TimerHandle_t xTimer) {
 
 // Task to read DHT11 sensor and send data to queue
 void read_dht11_task(void *pvParameters) {
-    DHT11_Data data = DHT11_Read();
-
-    if (data.humidity != -1 && data.humidity != 0) { // Check for valid data
+    // Try to read the sensor with multiple attempts
+    int attempts = 3;
+    DHT11_Data data;
+    bool success = false;
+    
+    while (attempts-- && !success) {
+        data = DHT11_Read();
+        
+        // Check if read was successful
+        if (data.humidity != -1 && data.temperature != -1) {
+            success = true;
+            break;
+        }
+        
+        // If failed but we have more attempts, wait briefly then retry
+        if (attempts > 0) {
+            ESP_LOGW(TAG, "DHT11 read attempt failed, retrying... (%d attempts left)", attempts);
+            vTaskDelay(pdMS_TO_TICKS(500)); // Wait before retry
+        }
+    }
+    
+    if (success) {
         // Send to queue only if valid
         xQueueSend(sensor_data_queue, &data, pdMS_TO_TICKS(100));
     } else {
-        ESP_LOGE(TAG, "DHT11 read failed, will retry at next timer interval");
+        ESP_LOGE(TAG, "DHT11 read failed after multiple attempts, will retry at next timer interval");
     }
 
     // Task is self-deleting
