@@ -9,6 +9,10 @@ bool fan_override = false;
 bool heater_override = false;
 DHT11_Data latest_sensor_data = {.temperature = 0, .humidity = 0};
 
+// Initialize temperature thresholds with defaults
+int temp_high = DEFAULT_TEMP_HIGH;
+int temp_low = DEFAULT_TEMP_LOW;
+
 static const char *TAG = "climate";
 
 // Initialize GPIO pins for fan and heater
@@ -38,6 +42,18 @@ void set_heater_state(bool state) {
     gpio_set_level(HEATER_GPIO, heater_state ? 1 : 0);
 }
 
+// Function to update temperature thresholds
+void set_temperature_thresholds(int low, int high) {
+    // Validate input
+    if (low < high) {
+        temp_low = low;
+        temp_high = high;
+        ESP_LOGI(TAG, "Temperature thresholds updated - Low: %d°C, High: %d°C", temp_low, temp_high);
+    } else {
+        ESP_LOGW(TAG, "Invalid thresholds (low must be less than high) - Low: %d°C, High: %d°C", low, high);
+    }
+}
+
 // Control fan based on temperature
 void control_fan(int temperature) {
     if (fan_override) {
@@ -45,7 +61,7 @@ void control_fan(int temperature) {
         return;
     }
     
-    bool new_state = (temperature > TEMP_HIGH);
+    bool new_state = (temperature > temp_high);
     
     // Only update if state changed
     if (new_state != fan_state) {
@@ -61,7 +77,7 @@ void control_heater(int temperature) {
         return;
     }
     
-    bool new_state = (temperature < TEMP_LOW);
+    bool new_state = (temperature < temp_low);
     
     // Only update if state changed
     if (new_state != heater_state) {
@@ -78,13 +94,32 @@ void sensor_reading_timer_callback(TimerHandle_t xTimer) {
 
 // Task to read DHT11 sensor and send data to queue
 void read_dht11_task(void *pvParameters) {
-    DHT11_Data data = DHT11_Read();
-
-    if (data.humidity != -1 && data.humidity != 0) { // Check for valid data
+    // Try to read the sensor with multiple attempts
+    int attempts = 3;
+    DHT11_Data data;
+    bool success = false;
+    
+    while (attempts-- && !success) {
+        data = DHT11_Read();
+        
+        // Check if read was successful
+        if (data.humidity != -1 && data.temperature != -1) {
+            success = true;
+            break;
+        }
+        
+        // If failed but we have more attempts, wait briefly then retry
+        if (attempts > 0) {
+            ESP_LOGW(TAG, "DHT11 read attempt failed, retrying... (%d attempts left)", attempts);
+            vTaskDelay(pdMS_TO_TICKS(500)); // Wait before retry
+        }
+    }
+    
+    if (success) {
         // Send to queue only if valid
         xQueueSend(sensor_data_queue, &data, pdMS_TO_TICKS(100));
     } else {
-        ESP_LOGE(TAG, "DHT11 read failed, will retry at next timer interval");
+        ESP_LOGE(TAG, "DHT11 read failed after multiple attempts, will retry at next timer interval");
     }
 
     // Task is self-deleting
@@ -109,10 +144,11 @@ void process_sensor_data_task(void *pvParameters) {
             control_heater(temperature);
             
             // Display status in serial monitor with clear formatting
-            ESP_LOGI(TAG, "Temperature: %d°C, Humidity: %d%%, Fan: %s, Heater: %s",
+            ESP_LOGI(TAG, "Temperature: %d°C, Humidity: %d%%, Fan: %s, Heater: %s, Thresholds: Low: %d°C, High: %d°C",
                    temperature, humidity, 
                    fan_state ? "ON" : "OFF", 
-                   heater_state ? "ON" : "OFF");
+                   heater_state ? "ON" : "OFF",
+                   temp_low, temp_high);
         }
     }
 }

@@ -14,9 +14,9 @@
 #define FAN_GPIO GPIO_NUM_12
 #define HEATER_GPIO GPIO_NUM_11
 
-// Temperature thresholds
-#define TEMP_HIGH 22
-#define TEMP_LOW 20
+// Default temperature thresholds
+#define DEFAULT_TEMP_HIGH 22
+#define DEFAULT_TEMP_LOW 20
 
 // Queue to handle sensor data
 extern QueueHandle_t sensor_data_queue;
@@ -31,6 +31,10 @@ extern bool fan_override;
 extern bool heater_override;
 extern DHT11_Data latest_sensor_data;
 
+// Temperature threshold variables (replacing macros with variables)
+extern int temp_high;
+extern int temp_low;
+
 // Function declarations
 void init_control_pins(void);
 void control_fan(int temperature);
@@ -41,5 +45,8 @@ void sensor_reading_timer_callback(TimerHandle_t xTimer);
 void read_dht11_task(void *pvParameters);
 void process_sensor_data_task(void *pvParameters);
 void app_main(void);
+
+// New function to update temperature thresholds
+void set_temperature_thresholds(int low, int high);
 
 #endif // CLIMATE_CONTROL_H

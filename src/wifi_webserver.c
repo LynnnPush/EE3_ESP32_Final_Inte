@@ -45,6 +45,21 @@ static const char *html_page = "<!DOCTYPE html>\n"
 "        .message-input { width: 80%; padding: 10px; margin: 10px 0; }\n"
 "        .data-value { font-weight: bold; }\n"
 "        .message-timestamp { font-size: 12px; color: #666; margin-top: 5px; }\n"
+"        .metrics-row { display: flex; justify-content: space-between; margin: 15px 0; flex-wrap: wrap; }\n"
+"        .metric-box { background-color: #f8f9fa; border-radius: 8px; padding: 15px; width: 30%; min-width: 150px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 10px; }\n"
+"        .metric-label { font-size: 14px; color: #666; margin-bottom: 5px; }\n"
+"        .metric-value { font-size: 24px; font-weight: bold; margin: 5px 0; }\n"
+"        .metric-unit { font-size: 12px; color: #888; }\n"
+"        .status-indicator-container { display: flex; flex-direction: column; align-items: center; justify-content: center; }\n"
+"        .status-indicator-large { width: 30px; height: 30px; border-radius: 50%; margin: 5px auto; }\n"
+"        .accepted { background-color: #4CAF50; box-shadow: 0 0 10px rgba(76, 175, 80, 0.5); }\n"
+"        .rejected { background-color: #e74c3c; box-shadow: 0 0 10px rgba(231, 76, 60, 0.5); }\n"
+"        .progress-container { margin: 20px 0; }\n"
+"        .progress-bar-container { width: 100%; background-color: #f0f0f0; border-radius: 5px; overflow: hidden; height: 20px; margin-top: 8px; }\n"
+"        .progress-bar { height: 100%; background-color: #4CAF50; text-align: center; line-height: 20px; color: white; transition: width 0.5s; }\n"
+"        details { background-color: #f8f8f8; border-radius: 5px; padding: 10px; margin-top: 10px; }\n"
+"        summary { cursor: pointer; font-weight: bold; margin-bottom: 10px; }\n"
+"        details[open] summary { margin-bottom: 15px; }\n"
 "    </style>\n"
 "</head>\n"
 "<body>\n"
@@ -118,38 +133,58 @@ static const char *html_page = "<!DOCTYPE html>\n"
 "    \n"
 "    <div id=\"NRF24\" class=\"tabcontent\">\n"
 "        <div class=\"card\">\n"
-"            <h2>NRF24L01 Transceiver</h2>\n"
+"            <h2>NRF24L01 Item Detection System</h2>\n"
 "            <div style=\"margin: 15px 0;\">\n"
 "                <h3>Status</h3>\n"
 "                <div>Mode: <span id=\"nrf-mode\">--</span></div>\n"
-"                <div>Last Message: </div>\n"
-"                <div class=\"nrf-message\" id=\"nrf-last-message\">\n"
-"                    <div>Raw: <span id=\"nrf-raw-message\">--</span></div>\n"
-"                    <div id=\"nrf-parsed-values\" style=\"display:none;\">\n"
-"                        <div>Accumulated item: <span id=\"nrf-value-1\" class=\"data-value\">--</span></div>\n"
-"                        <div>Current item weight: <span id=\"nrf-value-2\" class=\"data-value\">--</span></div>\n"
-"                        <div>Item status: <span id=\"nrf-value-3\" class=\"data-value\">--</span></div>\n"
+"                \n"
+"                <!-- Item Data Dashboard -->\n"
+"                <div id=\"nrf-parsed-values\" style=\"display:none; margin-top: 15px;\">\n"
+"                    <h3>Item Detection System</h3>\n"
+"                    \n"
+"                    <!-- Three main metrics in a row -->\n"
+"                    <div class=\"metrics-row\">\n"
+"                        <div class=\"metric-box\">\n"
+"                            <div class=\"metric-label\">Total Items</div>\n"
+"                            <div class=\"metric-value\" id=\"nrf-value-1\">--</div>\n"
+"                            <div class=\"metric-unit\">items</div>\n"
+"                        </div>\n"
+"                        \n"
+"                        <div class=\"metric-box\">\n"
+"                            <div class=\"metric-label\">Current Weight</div>\n"
+"                            <div class=\"metric-value\" id=\"nrf-value-2\">--</div>\n"
+"                            <div class=\"metric-unit\">g</div>\n"
+"                        </div>\n"
+"                        \n"
+"                        <div class=\"metric-box\">\n"
+"                            <div class=\"metric-label\">Item Status</div>\n"
+"                            <div class=\"status-indicator-container\">\n"
+"                                <div id=\"status-indicator\" class=\"status-indicator-large off\"></div>\n"
+"                                <div class=\"metric-value\" id=\"nrf-value-3-text\">Waiting</div>\n"
+"                            </div>\n"
+"                        </div>\n"
 "                    </div>\n"
-"                    <div class=\"message-timestamp\">Received: <span id=\"nrf-timestamp\">--</span></div>\n"
+"                    \n"
+"                    <!-- Progress visualization for accumulated items -->\n"
+"                    <div class=\"progress-container\">\n"
+"                        <h4>Progress to Target (100 items)</h4>\n"
+"                        <div class=\"progress-bar-container\">\n"
+"                            <div id=\"items-progress-bar\" class=\"progress-bar\" style=\"width: 0%;\">0%</div>\n"
+"                        </div>\n"
+"                    </div>\n"
+"                    \n"
+"                    <div class=\"message-timestamp\">Last update: <span id=\"nrf-timestamp\">--</span></div>\n"
 "                </div>\n"
-"            </div>\n"
-"        </div>\n"
-"        \n"
-"        <div class=\"card\">\n"
-"            <h2>NRF24L01 Controls</h2>\n"
-"            <div class=\"controls\">\n"
-"                <h3>Mode</h3>\n"
-"                <button onclick=\"nrfControl('mode', 'rx')\">Switch to RX Mode</button>\n"
-"                <button onclick=\"nrfControl('mode', 'tx')\">Switch to TX Mode</button>\n"
 "                \n"
-"                <h3>Send Message (TX Mode)</h3>\n"
-"                <input type=\"text\" id=\"message-input\" class=\"message-input\" placeholder=\"Enter message to send\">\n"
-"                <button onclick=\"sendNRFMessage()\">Send Message</button>\n"
-"                \n"
-"                <h3>Quick Commands</h3>\n"
-"                <button onclick=\"sendQuickCommand('OPEN_DOOR')\">Open Door</button>\n"
-"                <button onclick=\"sendQuickCommand('CLOSE_DOOR')\">Close Door</button>\n"
-"                <button onclick=\"sendQuickCommand('GET_TEMP')\">Get Temperature</button>\n"
+"                <!-- Raw message section - collapsed by default -->\n"
+"                <div style=\"margin-top: 20px;\">\n"
+"                    <details>\n"
+"                        <summary>Raw Message Data</summary>\n"
+"                        <div class=\"nrf-message\">\n"
+"                            <div>Raw: <span id=\"nrf-raw-message\">--</span></div>\n"
+"                        </div>\n"
+"                    </details>\n"
+"                </div>\n"
 "            </div>\n"
 "        </div>\n"
 "    </div>\n"
@@ -158,6 +193,7 @@ static const char *html_page = "<!DOCTYPE html>\n"
 "        // Variables to track last NRF message\n"
 "        let lastNrfMessage = '';"
 "        let nrfUpdateTimestamp = '';\n"
+"        let itemTarget = 100; // Target number of items for progress bar\n"
 
 "        // Tab functionality\n"
 "        function openTab(evt, tabName) {\n"
@@ -181,6 +217,72 @@ static const char *html_page = "<!DOCTYPE html>\n"
 "        function updateAllData() {\n"
 "            updateClimateData();\n"
 "            loadAuthorizedCards();\n"
+"        }\n"
+"        \n"
+"        // Update the NRF message display \n"
+"        function updateNRFDisplay(nrfMessage) {\n"
+"            if (nrfMessage && nrfMessage !== lastNrfMessage && nrfMessage !== 'None') {\n"
+"                lastNrfMessage = nrfMessage;\n"
+"                nrfUpdateTimestamp = new Date().toLocaleTimeString();\n"
+"                \n"
+"                // Update raw message display\n"
+"                document.getElementById('nrf-raw-message').textContent = nrfMessage;\n"
+"                document.getElementById('nrf-timestamp').textContent = nrfUpdateTimestamp;\n"
+"                \n"
+"                // Try to parse comma-separated values if present\n"
+"                const messageValues = nrfMessage.split(',');\n"
+"                if (messageValues.length >= 3) {\n"
+"                    // Show the parsed values section\n"
+"                    document.getElementById('nrf-parsed-values').style.display = 'block';\n"
+"                    \n"
+"                    // Parse values\n"
+"                    const totalItems = parseInt(messageValues[0]) || 0;\n"
+"                    const rawWeight = parseFloat(messageValues[1]) || 0;\n"
+"                    const itemStatus = parseInt(messageValues[2]) || 0;\n"
+"                    \n"
+"                    // Calculate actual weight (6000 - raw value)\n"
+"                    const calculatedWeight = 6000 - rawWeight;\n"
+"                    \n"
+"                    // Update the value displays\n"
+"                    document.getElementById('nrf-value-1').textContent = totalItems;\n"
+"                    document.getElementById('nrf-value-2').textContent = calculatedWeight.toFixed(1);\n"
+"                    \n"
+"                    // Update the status indicator\n"
+"                    const statusIndicator = document.getElementById('status-indicator');\n"
+"                    const statusText = document.getElementById('nrf-value-3-text');\n"
+"                    \n"
+"                    // Remove previous classes\n"
+"                    statusIndicator.classList.remove('accepted', 'rejected', 'off');\n"
+"                    \n"
+"                    // Add appropriate class based on status\n"
+"                    if (itemStatus === 1) {\n"
+"                        statusIndicator.classList.add('accepted');\n"
+"                        statusText.textContent = 'Accepted';\n"
+"                    } else {\n"
+"                        statusIndicator.classList.add('rejected');\n"
+"                        statusText.textContent = 'Rejected';\n"
+"                    }\n"
+"                    \n"
+"                    // Update progress bar\n"
+"                    const progressPercent = Math.min(100, Math.round((totalItems / itemTarget) * 100));\n"
+"                    const progressBar = document.getElementById('items-progress-bar');\n"
+"                    progressBar.style.width = progressPercent + '%';\n"
+"                    progressBar.textContent = progressPercent + '%';\n"
+"                    \n"
+"                    // Change progress bar color when target is reached\n"
+"                    if (progressPercent >= 100) {\n"
+"                        progressBar.style.backgroundColor = '#8e44ad'; // Purple when target reached\n"
+"                    } else {\n"
+"                        progressBar.style.backgroundColor = '#4CAF50'; // Default green\n"
+"                    }\n"
+"                } else {\n"
+"                    // If not in expected format, hide the parsed values section\n"
+"                    document.getElementById('nrf-parsed-values').style.display = 'none';\n"
+"                }\n"
+"            } else if (nrfMessage === 'None') {\n"
+"                document.getElementById('nrf-raw-message').textContent = 'No message received';\n"
+"                document.getElementById('nrf-parsed-values').style.display = 'none';\n"
+"            }\n"
 "        }\n"
 "        \n"
 "        function updateClimateData() {\n"
@@ -213,28 +315,7 @@ static const char *html_page = "<!DOCTYPE html>\n"
 "                    \n"
 "                    // Handle NRF message (parts[7]) - Check if it's a new message\n"
 "                    const nrfMessage = parts.slice(7).join(',');  // Rejoin in case message contains commas\n"
-"                    if (nrfMessage && nrfMessage !== lastNrfMessage && nrfMessage !== 'None') {\n"
-"                        lastNrfMessage = nrfMessage;\n"
-"                        nrfUpdateTimestamp = new Date().toLocaleTimeString();\n"
-"                        \n"
-"                        // Update raw message display\n"
-"                        document.getElementById('nrf-raw-message').textContent = nrfMessage;\n"
-"                        document.getElementById('nrf-timestamp').textContent = nrfUpdateTimestamp;\n"
-"                        \n"
-"                        // Try to parse comma-separated values if present\n"
-"                        const messageValues = nrfMessage.split(',');\n"
-"                        if (messageValues.length > 1) {\n"
-"                            document.getElementById('nrf-parsed-values').style.display = 'block';\n"
-"                            document.getElementById('nrf-value-1').textContent = messageValues[0] || '--';\n"
-"                            document.getElementById('nrf-value-2').textContent = messageValues[1] || '--';\n"
-"                            document.getElementById('nrf-value-3').textContent = messageValues[2] || '--';\n"
-"                        } else {\n"
-"                            document.getElementById('nrf-parsed-values').style.display = 'none';\n"
-"                        }\n"
-"                    } else if (nrfMessage === 'None') {\n"
-"                        document.getElementById('nrf-raw-message').textContent = 'No message received';\n"
-"                        document.getElementById('nrf-parsed-values').style.display = 'none';\n"
-"                    }\n"
+"                    updateNRFDisplay(nrfMessage);\n"
 "                })\n"
 "                .catch(error => {\n"
 "                    console.error('Error fetching climate data:', error);\n"
@@ -260,37 +341,6 @@ static const char *html_page = "<!DOCTYPE html>\n"
 "        \n"
 "        function doorControl(action) {\n"
 "            fetch(`/door?action=${action}`)\n"
-"                .then(response => response.text())\n"
-"                .then(data => {\n"
-"                    alert(data);\n"
-"                });\n"
-"        }\n"
-"        \n"
-"        function nrfControl(type, value) {\n"
-"            fetch(`/nrf_control?type=${type}&value=${value}`)\n"
-"                .then(response => response.text())\n"
-"                .then(data => {\n"
-"                    alert(data);\n"
-"                    updateClimateData();\n"
-"                });\n"
-"        }\n"
-"        \n"
-"        function sendNRFMessage() {\n"
-"            const message = document.getElementById('message-input').value;\n"
-"            if (message) {\n"
-"                fetch(`/nrf_send?message=${encodeURIComponent(message)}`)\n"
-"                    .then(response => response.text())\n"
-"                    .then(data => {\n"
-"                        alert(data);\n"
-"                        document.getElementById('message-input').value = '';\n"
-"                    });\n"
-"            } else {\n"
-"                alert('Please enter a message to send');\n"
-"            }\n"
-"        }\n"
-"        \n"
-"        function sendQuickCommand(command) {\n"
-"            fetch(`/nrf_send?message=${command}`)\n"
 "                .then(response => response.text())\n"
 "                .then(data => {\n"
 "                    alert(data);\n"
@@ -483,100 +533,6 @@ static esp_err_t door_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
-static esp_err_t nrf_control_handler(httpd_req_t *req)
-{
-    char buf[100] = {0};
-    char type[10] = {0};
-    char value[32] = {0};
-    char resp[100] = {0};
-    
-    // Get query string
-    int buf_len = httpd_req_get_url_query_len(req) + 1;
-    if (buf_len > 1) {
-        httpd_req_get_url_query_str(req, buf, buf_len);
-        
-        // Parse parameters
-        if (httpd_query_key_value(buf, "type", type, sizeof(type)) == ESP_OK &&
-            httpd_query_key_value(buf, "value", value, sizeof(value)) == ESP_OK) {
-            
-            ESP_LOGI(TAG, "NRF control request: type=%s, value=%s", type, value);
-            
-            if (strcmp(type, "mode") == 0) {
-                if (strcmp(value, "rx") == 0) {
-                    // Switch to receiver mode
-                    if (nrf_current_mode != NRF_MODE_RX) {
-                        initialize_nrf24l01(NRF_MODE_RX);
-                        // Restart the NRF task (would need proper task management)
-                        strcpy(resp, "Switched to RX (receiver) mode");
-                    } else {
-                        strcpy(resp, "Already in RX mode");
-                    }
-                } 
-                else if (strcmp(value, "tx") == 0) {
-                    // Switch to transmitter mode
-                    if (nrf_current_mode != NRF_MODE_TX) {
-                        initialize_nrf24l01(NRF_MODE_TX);
-                        // Restart the NRF task (would need proper task management)
-                        strcpy(resp, "Switched to TX (transmitter) mode");
-                    } else {
-                        strcpy(resp, "Already in TX mode");
-                    }
-                }
-                else {
-                    strcpy(resp, "Invalid mode value");
-                }
-            }
-            else {
-                strcpy(resp, "Invalid control type");
-            }
-        }
-        else {
-            strcpy(resp, "Missing parameters");
-        }
-    }
-    else {
-        strcpy(resp, "Missing query string");
-    }
-    
-    httpd_resp_send(req, resp, strlen(resp));
-    return ESP_OK;
-}
-
-static esp_err_t nrf_send_handler(httpd_req_t *req)
-{
-    char buf[100] = {0};
-    char message[33] = {0};
-    char resp[100] = {0};
-    
-    // Get query string
-    int buf_len = httpd_req_get_url_query_len(req) + 1;
-    if (buf_len > 1) {
-        httpd_req_get_url_query_str(req, buf, buf_len);
-        
-        // Parse message parameter
-        if (httpd_query_key_value(buf, "message", message, sizeof(message)) == ESP_OK) {
-            ESP_LOGI(TAG, "NRF send request: message=%s", message);
-            
-            if (nrf_current_mode == NRF_MODE_TX) {
-                // Send the message
-                nrf_send_data((uint8_t*)message, strlen(message));
-                sprintf(resp, "Message sent: %s", message);
-            } else {
-                strcpy(resp, "Cannot send - device is in RX mode");
-            }
-        }
-        else {
-            strcpy(resp, "Missing message parameter");
-        }
-    }
-    else {
-        strcpy(resp, "Missing query string");
-    }
-    
-    httpd_resp_send(req, resp, strlen(resp));
-    return ESP_OK;
-}
-
 static esp_err_t rfid_cards_handler(httpd_req_t *req)
 {
     esp_err_t err;
@@ -684,7 +640,7 @@ void start_webserver(void)
         };
         httpd_register_uri_handler(server, &rfid_cards);
         
-        // Register new NRF24L01 handlers
+        // Register door handler
         httpd_uri_t door = {
             .uri = "/door",
             .method = HTTP_GET,
@@ -692,22 +648,6 @@ void start_webserver(void)
             .user_ctx = NULL
         };
         httpd_register_uri_handler(server, &door);
-        
-        httpd_uri_t nrf_control = {
-            .uri = "/nrf_control",
-            .method = HTTP_GET,
-            .handler = nrf_control_handler,
-            .user_ctx = NULL
-        };
-        httpd_register_uri_handler(server, &nrf_control);
-        
-        httpd_uri_t nrf_send = {
-            .uri = "/nrf_send",
-            .method = HTTP_GET,
-            .handler = nrf_send_handler,
-            .user_ctx = NULL
-        };
-        httpd_register_uri_handler(server, &nrf_send);
         
         ESP_LOGI(TAG, "Web server started");
     } else {
